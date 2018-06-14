@@ -11,6 +11,7 @@ const glob = require('glob');
 
 const LIBRARY_NAME = require('../package.json').name;
 const main = require('../lib').main;
+const resolveNearestGitDirectoryParent = require('../lib/git-utils').resolveNearestGitDirectoryParent;
 
 const config = mri(process.argv.slice(2));
 
@@ -20,13 +21,14 @@ const config = mri(process.argv.slice(2));
  */
 let filesWhitelist = null;
 if (config.whitelist) {
+  const gitDirectoryParent = resolveNearestGitDirectoryParent(process.cwd());
   filesWhitelist = [];
   if (Array.isArray(config.whitelist)) {
     config.whitelist.forEach(pattern => {
-      filesWhitelist = [...filesWhitelist, ...glob.sync(config.whitelist)];
+      filesWhitelist = [...filesWhitelist, ...glob.sync(config.whitelist, { cwd: gitDirectoryParent })];
     });
   } else {
-    filesWhitelist = glob.sync(config.whitelist);
+    filesWhitelist = glob.sync(config.whitelist, { cwd: gitDirectoryParent });
   }
   if (!filesWhitelist || !filesWhitelist.length) {
     console.error(
